@@ -157,35 +157,30 @@ flowchart TD
    - 如果 Pod 已经处于运行（`Running`）或失败（`Failed`）状态，则进入优雅终止流程。
 6. **执行 PreStop 钩子（若配置）**
 
-- kubelet 首先调用 Pod 中的 `preStop` 钩子。
-  - PreStop 是容器终止前的自定义操作（如关闭连接、保存状态、通知其他服务等），`preStop` 钩子的执行时间包含在优雅终止宽限期内。
-  - 若 PreStop 执行时间超过宽限期，kubelet 会在宽限期结束后强制终止容器。
+   - kubelet 首先调用 Pod 中的 `preStop` 钩子。
+   - PreStop 是容器终止前的自定义操作（如关闭连接、保存状态、通知其他服务等），`preStop` 钩子的执行时间包含在优雅终止宽限期内。
+   - 若 PreStop 执行时间超过宽限期，kubelet 会在宽限期结束后强制终止容器。
 
 7. **发送 SIGTERM 信号（优雅终止）**
 
-  - 宽限期内，kubelet 通过容器运行时（如 containerd）向容器内的主进程发送`SIGTERM`信号，通知应用 “优雅退出”。
-  - 应用收到信号后应主动关闭资源（如释放文件句柄、断开数据库连接）并退出。
+   - 宽限期内，kubelet 通过容器运行时（如 containerd）向容器内的主进程发送`SIGTERM`信号，通知应用 “优雅退出”。
+   - 应用收到信号后应主动关闭资源（如释放文件句柄、断开数据库连接）并退出。
 
 8. **宽限期结束，发送 SIGKILL 信号（强制终止）**
 
-- 若容器在宽限期后仍在运行（如应用未处理 SIGTERM），kubelet 会发送 **SIGKILL 信号**，强制终止容器进程。该`SIGKILL`信号无法被捕获或忽略。
-
-- 容器运行时删除容器的相关资源（如命名空间、网络接口等）。
+   - 若容器在宽限期后仍在运行（如应用未处理 SIGTERM），kubelet 会发送 **SIGKILL 信号**，强制终止容器进程。该`SIGKILL`信号无法被捕获或忽略。
+   - 容器运行时删除容器的相关资源（如命名空间、网络接口等）。
 
 **阶段四：清理与通知**
 
 9. **清理资源**
 
-- 所有容器停止后，Kubelet 会清理 Pod 占用的所有资源，例如：
-  - 删除 Pod 的容器。
-  - 清理容器的日志和存储卷（如`emptyDir`会被删除，持久卷`PV`会根据回收策略处理）。
-  - 释放 IP 地址等网络资源。
+   - 所有容器停止后，Kubelet 会清理 Pod 占用的所有资源，例如：
+   - 删除 Pod 的容器。
+   - 清理容器的日志和存储卷（如`emptyDir`会被删除，持久卷`PV`会根据回收策略处理）。
+   - 释放 IP 地址等网络资源。
 
 10. **从 API Server 移除**
 
-- kubelet 向 API Server 发送 “Pod 已完全终止” 的通知，API Server 从 etcd 中删除该 Pod 的记录。
-
-- 此时 `kubectl get pods` 不再显示该 Pod（除非使用 `kubectl get pods --show-deleted`）。
-
-  
-
+   - kubelet 向 API Server 发送 “Pod 已完全终止” 的通知，API Server 从 etcd 中删除该 Pod 的记录。
+   - 此时 `kubectl get pods` 不再显示该 Pod（除非使用 `kubectl get pods --show-deleted`）。
