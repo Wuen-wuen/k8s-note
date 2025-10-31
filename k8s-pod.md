@@ -62,6 +62,7 @@ flowchart TD
 7. **绑定节点**
    - 调度器向 API Server 发送 **绑定请求**，将 Pod 的 `spec.nodeName` 字段更新为选中的节点名称
    - API Server 更新 etcd 中Pod的节点绑定信息。
+   - 一旦 Pod 绑定到某个节点上，除非节点自身问题或手动调整， 否则不会再调度到其他节点。
 
 **阶段四：Kubelet 创建 Pod**
 
